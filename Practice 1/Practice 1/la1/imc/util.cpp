@@ -133,6 +133,13 @@ void util::minMaxScalerDataSetInputs(Dataset *dataset, double minAllowed, double
                                      double *minData, double *maxData)
 {
     //TODO:
+    for (int i = 0; i < dataset->nOfInputs; i++)
+    {
+        for (int j = 0; j < dataset->nOfPatterns; j++)
+        {
+            dataset->inputs[j][i] = minMaxScaler(dataset->inputs[j][i], minAllowed, maxAllowed, minData[i], maxData[i]);
+        }
+    }
 }
 
 // ------------------------------
@@ -142,6 +149,13 @@ void util::minMaxScalerDataSetOutputs(Dataset *dataset, double minAllowed, doubl
                                       double minData, double maxData)
 { 
     //TODO:
+    for (int i = 0; i < dataset->nOfOutputs; i++)
+    {
+        for (int j = 0; j < dataset->nOfPatterns; j++)
+        {
+            dataset->outputs[j][i] = minMaxScaler(dataset->outputs[j][i], minAllowed, maxAllowed, minData[i], maxData[i]);
+        }
+    }
 }
 
 // ------------------------------

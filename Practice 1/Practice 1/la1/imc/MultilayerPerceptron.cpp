@@ -61,9 +61,12 @@ void MultilayerPerceptron::freeMemory()
 void MultilayerPerceptron::randomWeights() 
 {
 	//TODO:
-	for (int i = 0; i < nLayers; i++) {
-		for (int j = 0; j < layers[i].nNeurons; j++) {
-			for (int k = 0; k < layers[i].neurons[j].nInputs; k++) {
+	for (int i = 0; i < nLayers; i++) 
+	{
+		for (int j = 0; j < layers[i].nNeurons; j++) 
+		{
+			for (int k = 0; k < layers[i].neurons[j].nInputs; k++) 
+			{
 				layers[i].neurons[j].w[k] = random(-1, 1);
 			}
 		}
@@ -74,7 +77,10 @@ void MultilayerPerceptron::randomWeights()
 // Feed the input neurons of the network with a vector passed as an argument
 void MultilayerPerceptron::feedInputs(double* input) 
 {
-//TODO:
+	for (int i = 0; i < layers[0].nNeurons; i++) 
+	{
+		layers[0].neurons[i].output = input[i];
+	}
 }
 
 // ------------------------------
@@ -160,7 +166,8 @@ void MultilayerPerceptron::printNetwork()
 // input is the input vector of the pattern and target is the desired output vector of the pattern
 void MultilayerPerceptron::performEpochOnline(double* input, double* target) 
 {
-	//TODO:
+	//TODO: Inicializar deltas
+
 	feedInputs(input);
 	forwardPropagate();
 	backpropagateError(target);
