@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/program.dir/imc/util.cpp.o CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o CMakeFiles/program.dir/la1.cpp.o  -o program 

@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.cpp
+MultilayerPerceptron.h
+/mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.h
+util.h
+/mnt/d/Descargas/IMC/la1/imc/util.h
+iostream
+-
+fstream
+-
+sstream
+-
+string
+-
+limits
+-
+math.h
+-
+
+/mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.h
+util.h
+/mnt/d/Descargas/IMC/la1/imc/util.h
+
+/mnt/d/Descargas/IMC/la1/imc/util.h
+cstdlib
+-
+
