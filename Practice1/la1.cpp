@@ -25,22 +25,29 @@ using namespace util;
 
 int main(int argc, char **argv) {
     // Process arguments of the command line
-    bool Tflag = 0, wflag = 0, pflag = 0;
-    char *Tvalue = NULL, *wvalue = NULL;
+    system("clear");
+    bool Tflag = 0, wflag = 0, pflag = 0, tflag = 0, iflag = 0, lflag = 0, hflag = 0, eflag = 0, mflag = 0, sflag = 0;
+    char *Tvalue = NULL, *wvalue = NULL, *pvalue = NULL, *tvalue = NULL, *svalue = NULL;
+
+    char *nIterations = NULL, *nHidden = NULL, *nNeuronsLayer = NULL, *nEta = NULL, *nMu = NULL;
     int c;
 
-    opterr = 0;
+    int nIterationsValue = 1000, nHiddenValue = 1, nNeuronsLayerValue = 5;
+    double eta = 0.1, mu = 0.9;
 
+    opterr = 0;
     // a: Option that requires an argument
     // a:: The argument required is optional
-    while ((c = getopt(argc, argv, "T:w:p")) != -1)
+    while ((c = getopt(argc, argv, "t:T:i:l:h:e:m:p:")) != -1)
     {
-        // The parameters needed for using the optional prediction mode of Kaggle have been included.
-        // You should add the rest of parameters needed for the lab assignment.
         switch(c){
             case 'T':
                 Tflag = true;
                 Tvalue = optarg;
+                break;
+            case 't':
+                tflag = true;
+                tvalue = optarg;
                 break;
             case 'w':
                 wflag = true;
@@ -49,8 +56,38 @@ int main(int argc, char **argv) {
             case 'p':
                 pflag = true;
                 break;
+            case 'i':
+                iflag = true;
+                nIterations = optarg;
+                nIterationsValue = atoi(nIterations);
+                break;
+            case 'l':
+                lflag = true;
+                nHidden = optarg;
+                nHiddenValue = atoi(nHidden);
+                break;
+            case 'h':
+                hflag = true;
+                nNeuronsLayer = optarg;
+                nNeuronsLayerValue = atoi(nNeuronsLayer);
+                break;
+            case 'e':
+                eflag = true;
+                nEta = optarg;
+                eta = atof(nEta);
+                break;
+            case 'm':
+                mflag = true;
+                nMu = optarg;
+                mu = atof(nMu);
+                break;
+            case 's':
+                sflag = true;
+                svalue = optarg;
+                break;
             case '?':
-                if (optopt == 'T' || optopt == 'w' || optopt == 'p')
+            cout<<"here1.1"<<endl; 
+                if (optopt == 't' || optopt == 'w' || optopt == 'p')
                     fprintf (stderr, "The option -%c requires an argument.\n", optopt);
                 else if (isprint (optopt))
                     fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -63,30 +100,41 @@ int main(int argc, char **argv) {
                 return EXIT_FAILURE;
         }
     }
-
     if (!pflag) {
         //////////////////////////////////
         // TRAINING AND EVALUATION MODE //
         //////////////////////////////////
+        if(!tflag){
+            cout << "Error: Missing arguments" << endl;
+            return EXIT_FAILURE;
+        }
+
+        if(!Tflag)
+        {
+            Tvalue = tvalue;
+        }
 
         // Multilayer perceptron object
     	MultilayerPerceptron mlp;
-
         // Parameters of the mlp. For example, mlp.eta = value;
-    	int iterations = -1; // This should be corrected
 
         // Read training and test data: call to util::readData(...)
-    	Dataset * trainDataset = NULL; // This should be corrected
-    	Dataset * testDataset = NULL; // This should be corrected
+    	Dataset * trainDataset = readData(tvalue);
+    	Dataset * testDataset = readData(Tvalue);
+        //TODO: Check
+        int layers = nHiddenValue + 2;
 
-        // Initialize topology vector
-    	int layers=-1; // This should be corrected
-    	int * topology=NULL; // This should be corrected
+    	int * topology = new int[nNeuronsLayerValue];
+        topology[0] = trainDataset->nOfInputs;
+
+        for(int i = 1; i < nHiddenValue + 1; i++)
+        {
+            topology[i] = nNeuronsLayerValue;
+        }
+        topology[layers-1] = trainDataset->nOfOutputs;
 
         // Initialize the network using the topology vector
-        mlp.initialize(layers+2,topology);
-
-
+        mlp.initialize(layers,topology);
         // Seed for random numbers
         int seeds[] = {1,2,3,4,5};
         double *testErrors = new double[5];
@@ -97,7 +145,7 @@ int main(int argc, char **argv) {
             cout << "SEED " << seeds[i] << endl;
             cout << "**********" << endl;
             srand(seeds[i]);
-            mlp.runOnlineBackPropagation(trainDataset,testDataset,iterations,&(trainErrors[i]),&(testErrors[i]));
+            mlp.runOnlineBackPropagation(trainDataset,testDataset,nIterationsValue,&(trainErrors[i]),&(testErrors[i]));
             cout << "We end!! => Final test error: " << testErrors[i] << endl;
 
             // We save the weights every time we find a better model
@@ -107,21 +155,33 @@ int main(int argc, char **argv) {
                 bestTestError = testErrors[i];
             }
         }
-
         cout << "WE HAVE FINISHED WITH ALL THE SEEDS" << endl;
 
         double averageTestError = 0, stdTestError = 0;
         double averageTrainError = 0, stdTrainError = 0;
-        
-        // Obtain training and test averages and standard deviations
+
+
+        for(int i = 0; i < 5; i++)
+        {
+            averageTestError += testErrors[i];
+            averageTrainError += trainErrors[i];
+        }
 
         cout << "FINAL REPORT" << endl;
         cout << "************" << endl;
         cout << "Train error (Mean +- SD): " << averageTrainError << " +- " << stdTrainError << endl;
         cout << "Test error (Mean +- SD):          " << averageTestError << " +- " << stdTestError << endl;
+
+        for(int i = 0; i < layers; i++)
+        {
+            cout <<"Layer " << i << ": " << topology[i] << endl;
+        }
+
         return EXIT_SUCCESS;
     }
-    else {
+    
+    else 
+    {
 
         //////////////////////////////
         // PREDICTION MODE (KAGGLE) //
@@ -150,7 +210,5 @@ int main(int argc, char **argv) {
 
         return EXIT_SUCCESS;
     }
-
-    
 }
 

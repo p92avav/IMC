@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /mnt/d/Descargas/IMC/la1
+CMAKE_SOURCE_DIR = /mnt/d/Descargas/la1
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /mnt/d/Descargas/IMC/la1/build
+CMAKE_BINARY_DIR = /mnt/d/Descargas/la1/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/program.dir/depend.make
@@ -59,42 +59,42 @@ include CMakeFiles/program.dir/flags.make
 
 CMakeFiles/program.dir/imc/util.cpp.o: CMakeFiles/program.dir/flags.make
 CMakeFiles/program.dir/imc/util.cpp.o: ../imc/util.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/IMC/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/program.dir/imc/util.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/imc/util.cpp.o -c /mnt/d/Descargas/IMC/la1/imc/util.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/program.dir/imc/util.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/imc/util.cpp.o -c /mnt/d/Descargas/la1/imc/util.cpp
 
 CMakeFiles/program.dir/imc/util.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/program.dir/imc/util.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/IMC/la1/imc/util.cpp > CMakeFiles/program.dir/imc/util.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/la1/imc/util.cpp > CMakeFiles/program.dir/imc/util.cpp.i
 
 CMakeFiles/program.dir/imc/util.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/program.dir/imc/util.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/IMC/la1/imc/util.cpp -o CMakeFiles/program.dir/imc/util.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/la1/imc/util.cpp -o CMakeFiles/program.dir/imc/util.cpp.s
 
 CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o: CMakeFiles/program.dir/flags.make
 CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o: ../imc/MultilayerPerceptron.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/IMC/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o -c /mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o -c /mnt/d/Descargas/la1/imc/MultilayerPerceptron.cpp
 
 CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.cpp > CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/la1/imc/MultilayerPerceptron.cpp > CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.i
 
 CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/IMC/la1/imc/MultilayerPerceptron.cpp -o CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/la1/imc/MultilayerPerceptron.cpp -o CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.s
 
 CMakeFiles/program.dir/la1.cpp.o: CMakeFiles/program.dir/flags.make
 CMakeFiles/program.dir/la1.cpp.o: ../la1.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/IMC/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/program.dir/la1.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/la1.cpp.o -c /mnt/d/Descargas/IMC/la1/la1.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/mnt/d/Descargas/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/program.dir/la1.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/program.dir/la1.cpp.o -c /mnt/d/Descargas/la1/la1.cpp
 
 CMakeFiles/program.dir/la1.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/program.dir/la1.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/IMC/la1/la1.cpp > CMakeFiles/program.dir/la1.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /mnt/d/Descargas/la1/la1.cpp > CMakeFiles/program.dir/la1.cpp.i
 
 CMakeFiles/program.dir/la1.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/program.dir/la1.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/IMC/la1/la1.cpp -o CMakeFiles/program.dir/la1.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /mnt/d/Descargas/la1/la1.cpp -o CMakeFiles/program.dir/la1.cpp.s
 
 # Object files for target program
 program_OBJECTS = \
@@ -110,7 +110,7 @@ program: CMakeFiles/program.dir/imc/MultilayerPerceptron.cpp.o
 program: CMakeFiles/program.dir/la1.cpp.o
 program: CMakeFiles/program.dir/build.make
 program: CMakeFiles/program.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/d/Descargas/IMC/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable program"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/mnt/d/Descargas/la1/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable program"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/program.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -123,6 +123,6 @@ CMakeFiles/program.dir/clean:
 .PHONY : CMakeFiles/program.dir/clean
 
 CMakeFiles/program.dir/depend:
-	cd /mnt/d/Descargas/IMC/la1/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/d/Descargas/IMC/la1 /mnt/d/Descargas/IMC/la1 /mnt/d/Descargas/IMC/la1/build /mnt/d/Descargas/IMC/la1/build /mnt/d/Descargas/IMC/la1/build/CMakeFiles/program.dir/DependInfo.cmake --color=$(COLOR)
+	cd /mnt/d/Descargas/la1/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /mnt/d/Descargas/la1 /mnt/d/Descargas/la1 /mnt/d/Descargas/la1/build /mnt/d/Descargas/la1/build /mnt/d/Descargas/la1/build/CMakeFiles/program.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/program.dir/depend
 

@@ -121,22 +121,22 @@ void util::printDataset(Dataset *dataset, int len)
 // and max values of the feature in the dataset (minData and maxData). 
 double util::minMaxScaler(double x, double minAllowed, double maxAllowed, double minData, double maxData)
 {
-    //return (x - minData) / (maxData - minData) * (maxAllowed - minAllowed) + minAllowed;
-    return (x - minData) * (maxAllowed - minAllowed) / (maxData - minData) + minAllowed;
+    return minAllowed + (((x - minData) * (maxAllowed - minAllowed)) / (maxData - minData));
 }
 
 // ------------------------------
 // Scale the dataset inputs to a given range [minAllowed, maxAllowed] considering the min
 // and max values of the feature in the dataset (minData and maxData). 
-void util::minMaxScalerDataSetInputs(Dataset *dataset, double minAllowed, double maxAllowed, double *minData, double *maxData)
+void util::minMaxScalerDataSetInputs(Dataset *dataset, double minAllowed, double maxAllowed,
+                                     double *minData, double *maxData)
 {
-    for (int i = 0; i < dataset->nOfInputs; i++)
+    for(int i = 0; i < dataset->nOfInputs; i++)
     {
-        for (int j = 0; j < dataset->nOfPatterns; j++)
+        for(int j = 0; j < dataset -> nOfPatterns; j++)
         {
             dataset->inputs[j][i] = minMaxScaler(dataset->inputs[j][i], minAllowed, maxAllowed, minData[i], maxData[i]);
         }
-    } 
+    }
 }
 
 // ------------------------------
@@ -145,83 +145,84 @@ void util::minMaxScalerDataSetInputs(Dataset *dataset, double minAllowed, double
 void util::minMaxScalerDataSetOutputs(Dataset *dataset, double minAllowed, double maxAllowed,
                                       double minData, double maxData)
 {
-    //TODO: Check
-    for (int i = 0; i < dataset->nOfOutputs; i++)
+    for(int i = 0; i < dataset->nOfOutputs; i++)
     {
-        for (int j = 0; j < dataset->nOfPatterns; j++)
+        for(int j = 0; j < dataset -> nOfPatterns; j++)
         {
             dataset->outputs[j][i] = minMaxScaler(dataset->outputs[j][i], minAllowed, maxAllowed, minData, maxData);
         }
-    } 
+    }
 }
 
 // ------------------------------
 // Get a vector of minimum values of the dataset inputs
 double *util::minDatasetInputs(Dataset *dataset)
 {
-    //TODO: Check
     double *minData = new double[dataset->nOfInputs];
-    for (int i = 0; i < dataset->nOfInputs; i++)
+
+    for(int i = 0; i < dataset->nOfInputs; i++)
     {
         minData[i] = dataset->inputs[0][i];
-        for (int j = 0; j < dataset->nOfPatterns; j++)
+        for(int j = 0; j < dataset->nOfPatterns; j++)
         {
-            if (dataset->inputs[j][i] < minData[i])
+            if(dataset->inputs[j][i] < minData[i])
+            {
                 minData[i] = dataset->inputs[j][i];
+            }
         }
     }
-    return minData;
 }
 
 // ------------------------------
 // Get a vector of maximum values of the dataset inputs
 double *util::maxDatasetInputs(Dataset *dataset)
 {
-    //TODO: Check
-    double *maxData = new double[dataset->nOfInputs];
-    for (int i = 0; i < dataset->nOfInputs; i++)
+    double *maxData = new double[dataset->nOfOutputs];
+
+    for(int i = 0; i < dataset->nOfOutputs; i++)
     {
-        maxData[i] = dataset->inputs[0][i];
-        for (int j = 1; j < dataset->nOfPatterns; j++)
+        maxData[i] = dataset->outputs[0][i];
+        for(int j = 0; j < dataset->nOfPatterns; j++)
         {
-            if (dataset->inputs[j][i] > maxData[i])
-                maxData[i] = dataset->inputs[j][i];
+            if(dataset->outputs[j][i] > maxData[i])
+            {
+                maxData[i] = dataset->outputs[j][i];
+            }
         }
     }
-    return maxData;
 }
 
 // ------------------------------
 // Get the minimum value of the dataset outputs
 double util::minDatasetOutputs(Dataset *dataset)
 {
-    //TODO: Check
     double minData = dataset->outputs[0][0];
-    for (int i = 0; i < dataset->nOfOutputs; i++)
+    for(int i = 0; i < dataset->nOfPatterns; i++)
     {
-        for (int j = 0; j < dataset->nOfPatterns; j++)
+        for(int j = 0; j < dataset->nOfOutputs; j++)
         {
-            if (dataset->outputs[j][i] < minData)
-                minData = dataset->outputs[j][i];
+            if(dataset->outputs[i][j] < minData)
+            {
+                minData = dataset->outputs[i][j];
+            }
         }
     }
-    return minData;
 }
 
 // ------------------------------
  // Get the maximum value of the dataset outputs
 double util::maxDatasetOutputs(Dataset *dataset)
 {
-    //TODO: Check
     double maxData = dataset->outputs[0][0];
-    for (int i = 0; i < dataset->nOfOutputs; i++)
+
+    for(int i = 0; i < dataset->nOfPatterns; i++)
     {
-        for (int j = 0; j < dataset->nOfPatterns; j++)
+        for(int j = 0; j < dataset->nOfOutputs; j++)
         {
-            if (dataset->outputs[j][i] > maxData)
-                maxData = dataset->outputs[j][i];
+            if(dataset->outputs[i][j] > maxData)
+            {
+                maxData = dataset->outputs[i][j];
+            }
         }
     }
-    return maxData;
 }
-
