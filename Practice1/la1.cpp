@@ -86,7 +86,6 @@ int main(int argc, char **argv) {
                 svalue = optarg;
                 break;
             case '?':
-            cout<<"here1.1"<<endl; 
                 if (optopt == 't' || optopt == 'w' || optopt == 'p')
                     fprintf (stderr, "The option -%c requires an argument.\n", optopt);
                 else if (isprint (optopt))
@@ -172,10 +171,6 @@ int main(int argc, char **argv) {
         cout << "Train error (Mean +- SD): " << averageTrainError << " +- " << stdTrainError << endl;
         cout << "Test error (Mean +- SD):          " << averageTestError << " +- " << stdTestError << endl;
 
-        for(int i = 0; i < layers; i++)
-        {
-            cout <<"Layer " << i << ": " << topology[i] << endl;
-        }
 
         return EXIT_SUCCESS;
     }

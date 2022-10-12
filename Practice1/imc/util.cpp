@@ -171,6 +171,7 @@ double *util::minDatasetInputs(Dataset *dataset)
             }
         }
     }
+    return minData;
 }
 
 // ------------------------------
@@ -190,6 +191,7 @@ double *util::maxDatasetInputs(Dataset *dataset)
             }
         }
     }
+    return maxData;
 }
 
 // ------------------------------
@@ -207,6 +209,7 @@ double util::minDatasetOutputs(Dataset *dataset)
             }
         }
     }
+    return minData;
 }
 
 // ------------------------------
@@ -225,4 +228,5 @@ double util::maxDatasetOutputs(Dataset *dataset)
             }
         }
     }
+    return maxData;
 }

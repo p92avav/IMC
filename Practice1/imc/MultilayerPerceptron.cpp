@@ -32,6 +32,7 @@ MultilayerPerceptron::MultilayerPerceptron()
 // Give values to Layer* layers
 int MultilayerPerceptron::initialize(int nl, int npl[]) 
 {	
+	nOfLayers = nl;
 	layers = new Layer[nl];
 
 	for (int i = 0; i < nl; i++)
@@ -259,11 +260,13 @@ void MultilayerPerceptron::weightAdjustment()
 // Print the network, i.e. all the weight matrices
 void MultilayerPerceptron::printNetwork() 
 {
-	for(int i = 0; i < nOfLayers; i++)
+	for(int i =1; i < nOfLayers; i++)
 	{
+		cout<<"Layer "<<i<<endl;
 		for(int j = 0; j < layers[i].nOfNeurons; j++)
 		{
-			for(int k = 0; k < layers[i-1].nOfNeurons; k++)
+			cout<<"Neuron "<<j<<endl;
+			for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
 			{
 				cout << layers[i].neurons[j].w[k] << " ";
 			}
@@ -282,7 +285,7 @@ void MultilayerPerceptron::performEpochOnline(double* input, double* target)
 	{
 		for(int j = 0; j < layers[i].nOfNeurons; j++)
 		{
-			for(int k = 0; k < layers[i].nOfNeurons + 1; k++)
+			for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
 			{
 				layers[i].neurons[j].lastDeltaW[k] = layers[i].neurons[j].deltaW[k];
 				layers[i].neurons[j].deltaW[k] = 0;
