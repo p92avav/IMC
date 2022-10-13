@@ -186,11 +186,11 @@ double MultilayerPerceptron::obtainError(double* target)
 
 	for (int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
 	{
-		double error = target[i] - layers[nOfLayers - 1].neurons[i].out;
-		MSE += error * error;
+		MSE += pow(target[i] - layers[nOfLayers - 1].neurons[i].out, 2);
+		
 	}
 
-	MSE /= layers[nOfLayers - 1].nOfNeurons;
+	MSE = MSE / layers[nOfLayers - 1].nOfNeurons;
 	return MSE;
 }
 
@@ -210,9 +210,9 @@ void MultilayerPerceptron::backpropagateError(double* target)
 		for(int j = 0; j < layers[i].nOfNeurons; j++)
 		{
 			double sum = 0;
-			for(int k = 0; k < layers[i+1].nOfNeurons; k++)
+			for(int k = 0; k < layers[i + 1].nOfNeurons; k++)
 			{
-				sum += layers[i+1].neurons[k].delta * layers[i+1].neurons[k].w[j];
+				sum += layers[i + 1].neurons[k].delta * layers[i + 1].neurons[k].w[j];
 			}
 			double newDelta = sum * layers[i].neurons[j].out * (1 - layers[i].neurons[j].out);
 			layers[i].neurons[j].delta = newDelta;
@@ -229,11 +229,11 @@ void MultilayerPerceptron::accumulateChange()
 	{
 		for (int j = 0; j < layers[i].nOfNeurons; j++)
 		{
-			for (int k = 0; k < layers[i-1].nOfNeurons; k++)
+			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
 			{
-				layers[i].neurons[j].deltaW[k] += layers[i].neurons[j].delta * layers[i-1].neurons[k].out;
+				layers[i].neurons[j].deltaW[k] += layers[i].neurons[j].delta * layers[i - 1].neurons[k].out;
 			}
-			layers[i].neurons[j].deltaW[layers[i-1].nOfNeurons] += layers[i].neurons[j].delta;
+			layers[i].neurons[j].deltaW[layers[i - 1].nOfNeurons] += layers[i].neurons[j].delta;
 		}
 	}
 }
@@ -246,7 +246,7 @@ void MultilayerPerceptron::weightAdjustment()
 	{
 		for (int j = 0; j < layers[i].nOfNeurons; j++)
 		{
-			for (int k = 0; k < layers[i-1].nOfNeurons; k++)
+			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
 			{
 				layers[i].neurons[j].w[k] -= eta * layers[i].neurons[j].deltaW[k] + mu * eta * layers[i].neurons[j].lastDeltaW[k];
 			}
