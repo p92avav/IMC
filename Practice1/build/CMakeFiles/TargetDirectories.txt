@@ -1,3 +1,0 @@
-/mnt/d/Descargas/la1/build/CMakeFiles/rebuild_cache.dir
-/mnt/d/Descargas/la1/build/CMakeFiles/edit_cache.dir
-/mnt/d/Descargas/la1/build/CMakeFiles/program.dir
