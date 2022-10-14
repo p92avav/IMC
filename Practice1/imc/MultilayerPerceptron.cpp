@@ -248,7 +248,7 @@ void MultilayerPerceptron::weightAdjustment()
 		{
 			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
 			{
-				layers[i].neurons[j].w[k] -= eta * layers[i].neurons[j].deltaW[k] - mu * eta * layers[i].neurons[j].lastDeltaW[k];
+				layers[i].neurons[j].w[k] -= eta * layers[i].neurons[j].deltaW[k] + mu * eta * layers[i].neurons[j].lastDeltaW[k];
 			}
 			double value = (eta * layers[i].neurons[j].deltaW[layers[i - 1].nOfNeurons - 1]) + (mu * eta * layers[i].neurons[j].lastDeltaW[layers[i - 1].nOfNeurons - 1]);
 			layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] = layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] - value;
