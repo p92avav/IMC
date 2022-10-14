@@ -65,6 +65,7 @@ int main(int argc, char **argv) {
                 lflag = true;
                 nHidden = optarg;
                 nHiddenValue = atoi(nHidden);
+
                 break;
             case 'h':
                 hflag = true;
