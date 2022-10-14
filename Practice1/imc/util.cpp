@@ -121,9 +121,8 @@ void util::printDataset(Dataset *dataset, int len)
 // and max values of the feature in the dataset (minData and maxData). 
 double util::minMaxScaler(double x, double minAllowed, double maxAllowed, double minData, double maxData)
 {
-    return minAllowed + (((x - minData) * (maxAllowed - minAllowed)) / (maxData - minData));
+    return (x - minData) * (maxAllowed - minAllowed) / (maxData - minData) + minAllowed;
 }
-
 // ------------------------------
 // Scale the dataset inputs to a given range [minAllowed, maxAllowed] considering the min
 // and max values of the feature in the dataset (minData and maxData). 
@@ -134,6 +133,7 @@ void util::minMaxScalerDataSetInputs(Dataset *dataset, double minAllowed, double
     {
         for(int j = 0; j < dataset -> nOfPatterns; j++)
         {
+        
             dataset->inputs[j][i] = minMaxScaler(dataset->inputs[j][i], minAllowed, maxAllowed, minData[i], maxData[i]);
         }
     }
@@ -149,7 +149,7 @@ void util::minMaxScalerDataSetOutputs(Dataset *dataset, double minAllowed, doubl
     {
         for(int j = 0; j < dataset -> nOfPatterns; j++)
         {
-            dataset->outputs[j][i] = minMaxScaler(dataset->outputs[j][i], minAllowed, maxAllowed, minData, maxData);
+            dataset->outputs[i][j] = minMaxScaler(dataset->outputs[i][j], minAllowed, maxAllowed, minData, maxData);
         }
     }
 }

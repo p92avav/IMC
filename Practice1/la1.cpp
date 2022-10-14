@@ -124,23 +124,20 @@ int main(int argc, char **argv) {
         
         if(sflag)
         {
-
             double *minTrainDatasetInputs = minDatasetInputs(trainDataset);
             double *maxTrainDatasetInputs = maxDatasetInputs(trainDataset);
-            minMaxScalerDataSetInputs(trainDataset, 0, 1, minTrainDatasetInputs, maxTrainDatasetInputs);
-            
-            double *minTestDatasetInputs = minDatasetInputs(testDataset);
-            double *maxTestDatasetInputs = maxDatasetInputs(testDataset);
-            minMaxScalerDataSetInputs(testDataset, 0, 1, minTestDatasetInputs, maxTestDatasetInputs);
-
             double minTrainDatasetOutputs = minDatasetOutputs(trainDataset);
             double maxTrainDatasetOutputs = maxDatasetOutputs(trainDataset);
+            minMaxScalerDataSetInputs(trainDataset, -1, 1, minTrainDatasetInputs, maxTrainDatasetInputs);
             minMaxScalerDataSetOutputs(trainDataset, 0, 1, minTrainDatasetOutputs, maxTrainDatasetOutputs);
 
+
+            double *minTestDatasetInputs = minDatasetInputs(testDataset);
+            double *maxTestDatasetInputs = maxDatasetInputs(testDataset);
             double minTestDatasetOutputs = minDatasetOutputs(testDataset);
             double maxTestDatasetOutputs = maxDatasetOutputs(testDataset);
+            minMaxScalerDataSetInputs(testDataset, -1, 1, minTestDatasetInputs, maxTestDatasetInputs);
             minMaxScalerDataSetOutputs(testDataset, 0, 1, minTestDatasetOutputs, maxTestDatasetOutputs);
-
         }
 
         //TODO: Check
