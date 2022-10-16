@@ -287,7 +287,6 @@ void MultilayerPerceptron::performEpochOnline(double* input, double* target)
 		{
 			for(int k = 0; k < layers[i - 1].nOfNeurons + 1; k++)
 			{
-				layers[i].neurons[j].lastDeltaW[k] = layers[i].neurons[j].deltaW[k];
 				layers[i].neurons[j].deltaW[k] = 0.0;
 			}
 		}
