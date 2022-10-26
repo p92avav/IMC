@@ -25,7 +25,11 @@ using namespace util;
 // Constructor: Default values for all the parameters
 MultilayerPerceptron::MultilayerPerceptron()
 {
-
+	//TODO: Check
+	eta = 1.0;
+	mu = 0.7;
+	outputFunction = 0;
+	online = false;
 }
 
 
@@ -166,6 +170,38 @@ void MultilayerPerceptron::restoreWeights()
 void MultilayerPerceptron::forwardPropagate() 
 {
 	//TODO: Check
+	if(outputFunction == 0)
+	{
+		for (int i = 1; i < nOfLayers; i++)
+		{
+			for (int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				double sum = 0;
+				for (int k = 0; k < layers[i-1].nOfNeurons; k++)
+				{
+					sum += layers[i-1].neurons[k].out * layers[i].neurons[j].w[k];
+				}
+				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
+				layers[i].neurons[j].out = 1/(1 + exp(-sum));
+			}
+		}			
+	}
+
+	if(outputFunction == 1)
+	{
+		for(int i = 1; i < nOfLayers; i++)
+		{
+			double sum = 0;
+			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
+			{
+				sum += exp(layers[nOfLayers - 1].neurons[j].out);
+			}
+			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
+			{
+				layers[nOfLayers - 1].neurons[j].out = exp(layers[nOfLayers - 1].neurons[j].out)/sum;
+			}
+		}
+	}
 }
 
 // ------------------------------
@@ -174,6 +210,25 @@ void MultilayerPerceptron::forwardPropagate()
 double MultilayerPerceptron::obtainError(double* target, int errorFunction) 
 {
 	//TODO: Check
+	if(errorFunction == 0)
+	{
+		double error = 0;
+		for (int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{
+			error += pow(target[i] - layers[nOfLayers - 1].neurons[i].out, 2);
+		}
+		return error / layers[nOfLayers - 1].nOfNeurons;
+	}
+
+	if(errorFunction == 1)
+	{
+		double error = 0;
+		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{
+			error += target[i] * log(layers[nOfLayers - 1].neurons[i].out);
+		}
+		return error / layers[nOfLayers - 1].nOfNeurons;
+	}
 }
 
 
@@ -183,6 +238,34 @@ double MultilayerPerceptron::obtainError(double* target, int errorFunction)
 void MultilayerPerceptron::backpropagateError(double* target, int errorFunction) 
 {
 	//TODO: Check
+	if(outputFunction == 0)
+	{
+		//TODO: IF comprobando el errorFunction
+		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{
+			double newDelta = -(target[i] - layers[nOfLayers - 1].neurons[i].out) * layers[nOfLayers - 1].neurons[i].out * (1 - layers[nOfLayers - 1].neurons[i].out);
+			layers[nOfLayers - 1].neurons[i].delta = newDelta;
+		}
+
+		for(int i = nOfLayers - 2; i > 0; i--)
+		{
+			for(int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				double sum = 0;
+				for(int k = 0; k < layers[i + 1].nOfNeurons; k++)
+				{
+					sum += layers[i + 1].neurons[k].delta * layers[i + 1].neurons[k].w[j];
+				}
+				double newDelta = sum * layers[i].neurons[j].out * (1 - layers[i].neurons[j].out);
+				layers[i].neurons[j].delta = newDelta;
+			}
+		}
+	}
+
+	if(errorFunction == 1)
+	{
+
+	}
 }
 
 // ------------------------------
@@ -190,6 +273,17 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 void MultilayerPerceptron::accumulateChange() 
 {
 	//TODO: Check
+	for(int i = 1; i < nOfLayers; i++)
+	{
+		for(int j = 0; j < layers[i].nOfNeurons; j++)
+		{
+			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
+			{
+				layers[i].neurons[j].deltaW[k] += layers[i].neurons[j].delta * layers[i - 1].neurons[k].out;
+			}
+			layers[i].neurons[j].deltaW[layers[i - 1].nOfNeurons] += layers[i].neurons[j].delta;
+		}
+	}
 }
 
 // ------------------------------
@@ -197,6 +291,19 @@ void MultilayerPerceptron::accumulateChange()
 void MultilayerPerceptron::weightAdjustment() 
 {
 	//TODO: Check
+	int N = nOfTrainingPatterns;
+	for (int i = 1; i < nOfLayers; i++)
+	{
+		for (int j = 0; j < layers[i].nOfNeurons; j++)
+		{
+			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
+			{
+				layers[i].neurons[j].w[k] -= (eta * layers[i].neurons[j].deltaW[k])/N + (mu * eta * layers[i].neurons[j].lastDeltaW[k])/N;
+			}
+			double value = (eta * layers[i].neurons[j].deltaW[layers[i - 1].nOfNeurons - 1])/N + (mu * eta * layers[i].neurons[j].lastDeltaW[layers[i - 1].nOfNeurons - 1])/N;
+			layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] = layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] - value;
+		}
+	}	
 }
 
 // ------------------------------
@@ -228,6 +335,26 @@ void MultilayerPerceptron::printNetwork()
 void MultilayerPerceptron::performEpoch(double* input, double* target, int errorFunction) 
 {
 	//TODO: Check
+	for(int i = 1; i < nOfLayers; i++)
+	{
+		for(int j = 0; j < layers[i].nOfNeurons; j++)
+		{
+			for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
+			{
+				layers[i].neurons[j].deltaW[k] = 0.0;
+			}
+		}
+	}
+
+	feedInputs(input);
+	forwardPropagate();
+	obtainError(target, errorFunction);
+	backpropagateError(target, errorFunction);
+	accumulateChange();
+	if (online == true)
+	{
+		weightAdjustment();
+	}
 }
 
 // ------------------------------
@@ -236,6 +363,14 @@ void MultilayerPerceptron::performEpoch(double* input, double* target, int error
 void MultilayerPerceptron::train(Dataset* trainDataset, int errorFunction) 
 {
 	//TODO: Check
+	for(int i = 0; i < trainDataset->nOfPatterns; i++)
+	{
+		performEpoch(trainDataset->inputs[i], trainDataset->outputs[i], errorFunction);
+	}
+	if(online == false)
+	{
+		weightAdjustment();
+	}
 }
 
 // ------------------------------
@@ -244,6 +379,25 @@ void MultilayerPerceptron::train(Dataset* trainDataset, int errorFunction)
 double MultilayerPerceptron::test(Dataset* dataset, int errorFunction) 
 {
 	//TODO: Check
+	double Error = 0;
+
+	for(int i = 0; i < dataset->nOfPatterns; i++)
+	{
+		feedInputs(dataset->inputs[i]);
+		forwardPropagate();
+		Error += obtainError(dataset->outputs[i], errorFunction);
+	}
+
+	if(errorFunction == 0)
+	{
+		Error = Error / dataset->nOfPatterns;
+	}
+	if(errorFunction == 1)
+	{
+		Error = Error / -(dataset->nOfPatterns);
+	}
+
+	return Error;
 }
 
 
@@ -252,6 +406,17 @@ double MultilayerPerceptron::test(Dataset* dataset, int errorFunction)
 double MultilayerPerceptron::testClassification(Dataset* dataset) 
 {
 	//TODO: Check
+	double CCR = 0;
+
+	for(int i = 0; i < dataset->nOfPatterns; i++)
+	{
+		feedInputs(dataset->inputs[i]);
+		forwardPropagate();
+		CCR += obtainError(dataset->outputs[i], 1);
+	}
+
+	CCR = CCR/-(dataset->nOfPatterns);
+	return CCR;
 }
 
 
