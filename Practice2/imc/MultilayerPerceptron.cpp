@@ -170,39 +170,53 @@ void MultilayerPerceptron::restoreWeights()
 void MultilayerPerceptron::forwardPropagate() 
 {
 	//TODO: Check SOFTMAX in the last layer
-
-	for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; i++)
+	if(outputFunction == 0)
 	{
-		for(int j = 0; j < layers[i].nOfNeurons; j++)
+		for (int i = 1; i < nOfLayers ; ++i)
 		{
-			double sum1 = 0.0;
-			for(int k = 0; k < layers[i-1].nOfNeurons; k++)
-			{
-				sum1 += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
+			for(int j = 0; j < layers[i].nOfNeurons; ++j)
+			{	
+				double sum = 0.0;
+				for(int k = 0; k < layers[i-1].nOfNeurons; ++k)
+				{
+					sum += layers[i].neurons[j].out += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
+				}
+				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
+				layers[i].neurons[j].out = 1/(1+exp(-sum));
 			}
-			sum1 += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
-			
-			double sum2 = 0.0;
-			for(int k = 0; k < layers[i].nOfNeurons; k++)
-			{
-				sum2 += exp(sum1);
-			}
-			layers[nOfLayers-1].neurons[i].out = exp(sum1)/sum2;
 		}
 	}
 
-	//TODO: CHECK the hidden layers
-	for (int i = 1; i < nOfLayers-1; i++)
+	else if(outputFunction == 1)
 	{
-		for (int j = 0; j < layers[i].nOfNeurons; j++)
+		for (int i = 1; i < nOfLayers -1; ++i)
 		{
-			double sum = 0;
-			for (int k = 0; k < layers[i-1].nOfNeurons; k++)
-			{
-				sum += layers[i-1].neurons[k].out * layers[i].neurons[j].w[k];
+			for(int j = 0; j < layers[i].nOfNeurons; ++j)
+			{	
+				double sum = 0.0;
+				for(int k = 0; k < layers[i-1].nOfNeurons; ++k)
+				{
+					sum += layers[i].neurons[j].out += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
+				}
+				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
+				layers[i].neurons[j].out = 1/(1+exp(-sum));
 			}
-			sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
-			layers[i].neurons[j].out = 1/(1 + exp(-sum));
+		}
+
+		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; ++i)
+		{	double net = 0.0;
+			for(int j = 0; j < layers[nOfLayers-2].nOfNeurons; ++j)
+			{
+				net += layers[nOfLayers-1].neurons[i].out += layers[nOfLayers-1].neurons[i].w[j] * layers[nOfLayers-2].neurons[j].out;
+			}
+			net += layers[nOfLayers-1].neurons[i].w[layers[nOfLayers-2].nOfNeurons];
+			
+			double sum = 0.0;
+			for(int j = 0; j < layers[nOfLayers-2].nOfNeurons; ++j)
+			{
+				sum += exp(net);
+			}
+			layers[nOfLayers-1].neurons[i].out = exp(net) / sum;
 		}
 	}
 }
@@ -243,7 +257,7 @@ double MultilayerPerceptron::obtainError(double* target, int errorFunction)
 void MultilayerPerceptron::backpropagateError(double* target, int errorFunction) 
 {
 	//TODO: Check errorFunction and outputFunction
-	if(errorFunction == 0 && outputFunction == 0)
+	if(outputFunction == 0 && errorFunction == 0)
 	{
 		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
 		{
@@ -266,7 +280,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 		}
 	}
 
-	if(errorFunction == 0 && outputFunction == 1)
+	if(outputFunction == 0 && errorFunction == 1)
 	{
 		for(int  i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
 		{
@@ -289,9 +303,9 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 	}
 
 	//TODO: Check notation unit 1
-	if(errorFunction == 1 && outputFunction == 0)
+	if(outputFunction == 1 && errorFunction == 0)
 	{
-		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		for(int  i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
 		{
 			double sum = 0.0;
 			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
@@ -305,6 +319,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 					sum += (target[i] - layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (-layers[nOfLayers-1].neurons[i].out);
 				}
 			}	
+			layers[nOfLayers - 1].neurons[i].delta = sum;
 		}
 		//TODO: ADD Hidden layers
 		for(int i = nOfLayers - 2; i > 0; i--)
@@ -322,9 +337,24 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 		}
 	}
 
-	if(errorFunction == 1 && outputFunction == 1)
+	if(outputFunction == 1 && errorFunction == 1)
 	{
 		//TODO: ADD Hidden layers
+		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{	
+			double sum = 0.0;
+			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
+			{
+				if( i == j)
+				{
+					sum += (target[i] / layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (1 - layers[nOfLayers-1].neurons[i].out);
+				}
+				else
+				{
+					sum += (target[i] / layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (-layers[nOfLayers-1].neurons[i].out);
+				}
+			}
+		}
 		for(int i = nOfLayers - 2; i > 0; i--)
 		{
 			for(int j = 0; j < layers[i].nOfNeurons; j++)

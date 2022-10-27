@@ -1,0 +1,1 @@
+./la2 -t ../datasets/dat/train_xor.dat -T ../datasets/dat/test_xor.dat -i 1000 -l 1 -h 16 -e 0.7 -m 1 -f 1 -s

@@ -182,7 +182,7 @@ system("clear");
         //mlp.initialize(layers+2,topology);
 
         int layers = nHiddenValue + 2;
-        int *topology = new int[nNeuronsLayerValue];
+        int *topology = new int[layers];
 
         topology[0] = trainDataset->nOfInputs;
 
@@ -236,6 +236,21 @@ system("clear");
         testAverageError /= 5;
         trainAverageCCR /= 5;
         testAverageCCR /= 5;
+
+        for(int i=0; i<5; i++)
+        {
+            trainStdError += pow(trainErrors[i] - trainAverageError, 2);
+            testStdError += pow(testErrors[i] - testAverageError, 2);
+            trainStdCCR += pow(trainCCRs[i] - trainAverageCCR, 2);
+            testStdCCR += pow(testCCRs[i] - testAverageCCR, 2);
+        }
+
+        trainStdError = sqrt(trainStdError/5);
+        testStdError = sqrt(testStdError/5);
+        trainStdCCR = sqrt(trainStdCCR/5);
+        testStdCCR = sqrt(testStdCCR/5);
+
+
 		cout << "WE HAVE FINISHED WITH ALL THE SEEDS" << endl;
 
 		cout << "FINAL REPORT" << endl;
