@@ -169,6 +169,7 @@ double *util::minDatasetInputs(Dataset *dataset)
                 minVector[i] = dataset->inputs[j][i];
         }
     }
+    return minVector;
 }
 
 // ------------------------------
@@ -186,6 +187,8 @@ double *util::maxDatasetInputs(Dataset *dataset)
                 maxVector[i] = dataset->inputs[j][i];
         }
     }
+
+    return maxVector;
 }
 
 // ------------------------------
@@ -202,6 +205,7 @@ double util::minDatasetOutputs(Dataset *dataset)
                 minValue = dataset->outputs[i][j];
         }
     }
+    return minValue;
 }
 
 // ------------------------------
@@ -218,5 +222,6 @@ double util::maxDatasetOutputs(Dataset *dataset)
                 maxValue = dataset->outputs[i][j];
         }
     }
+    return maxValue;
 }
 
