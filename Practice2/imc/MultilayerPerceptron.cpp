@@ -169,7 +169,7 @@ void MultilayerPerceptron::restoreWeights()
 // Calculate and propagate the outputs of the neurons, from the first layer until the last one -->-->
 void MultilayerPerceptron::forwardPropagate() 
 {
-	//TODO: Check SOFTMAX in the last layer
+	//Sigmoid in every layer
 	if(outputFunction == 0)
 	{
 		for (int i = 1; i < nOfLayers ; ++i)
@@ -179,14 +179,16 @@ void MultilayerPerceptron::forwardPropagate()
 				double sum = 0.0;
 				for(int k = 0; k < layers[i-1].nOfNeurons; ++k)
 				{
-					sum += layers[i].neurons[j].out += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
+					sum += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
 				}
+
 				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
 				layers[i].neurons[j].out = 1/(1+exp(-sum));
 			}
 		}
 	}
 
+	//Sigmoid + softmax in the last layer
 	else if(outputFunction == 1)
 	{
 		for (int i = 1; i < nOfLayers -1; ++i)
@@ -196,26 +198,29 @@ void MultilayerPerceptron::forwardPropagate()
 				double sum = 0.0;
 				for(int k = 0; k < layers[i-1].nOfNeurons; ++k)
 				{
-					sum += layers[i].neurons[j].out += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
+					sum += layers[i].neurons[j].w[k] * layers[i-1].neurons[k].out;
 				}
+
 				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
 				layers[i].neurons[j].out = 1/(1+exp(-sum));
 			}
 		}
 
 		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; ++i)
-		{	double net = 0.0;
+		{	
+			double net = 0.0;
 			for(int j = 0; j < layers[nOfLayers-2].nOfNeurons; ++j)
 			{
-				net += layers[nOfLayers-1].neurons[i].out += layers[nOfLayers-1].neurons[i].w[j] * layers[nOfLayers-2].neurons[j].out;
+				net += layers[nOfLayers-1].neurons[i].w[j] * layers[nOfLayers-2].neurons[j].out;
 			}
 			net += layers[nOfLayers-1].neurons[i].w[layers[nOfLayers-2].nOfNeurons];
 			
 			double sum = 0.0;
-			for(int j = 0; j < layers[nOfLayers-2].nOfNeurons; ++j)
+			for(int j = 0; j < layers[nOfLayers-1].nOfNeurons; ++j)
 			{
 				sum += exp(net);
 			}
+			
 			layers[nOfLayers-1].neurons[i].out = exp(net) / sum;
 		}
 	}
@@ -256,7 +261,7 @@ double MultilayerPerceptron::obtainError(double* target, int errorFunction)
 // errorFunction=1 => Cross Entropy // errorFunction=0 => MSE
 void MultilayerPerceptron::backpropagateError(double* target, int errorFunction) 
 {
-	//TODO: Check errorFunction and outputFunction
+	// Sigmoid and MSE
 	if(outputFunction == 0 && errorFunction == 0)
 	{
 		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
@@ -280,6 +285,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 		}
 	}
 
+	//Sigmoid and CCR
 	if(outputFunction == 0 && errorFunction == 1)
 	{
 		for(int  i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
@@ -302,7 +308,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 		}
 	}
 
-	//TODO: Check notation unit 1
+	//Softmax and MSE
 	if(outputFunction == 1 && errorFunction == 0)
 	{
 		for(int  i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
@@ -319,9 +325,9 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 					sum += (target[i] - layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (-layers[nOfLayers-1].neurons[i].out);
 				}
 			}	
-			layers[nOfLayers - 1].neurons[i].delta = sum;
+			layers[nOfLayers - 1].neurons[i].delta = -sum;
 		}
-		//TODO: ADD Hidden layers
+
 		for(int i = nOfLayers - 2; i > 0; i--)
 		{
 			for(int j = 0; j < layers[i].nOfNeurons; j++)
@@ -337,9 +343,10 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 		}
 	}
 
+	//Softmax and CCR
 	if(outputFunction == 1 && errorFunction == 1)
 	{
-		//TODO: ADD Hidden layers
+	
 		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
 		{	
 			double sum = 0.0;
@@ -354,6 +361,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 					sum += (target[i] / layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (-layers[nOfLayers-1].neurons[i].out);
 				}
 			}
+			layers[nOfLayers - 1].neurons[i].delta = -sum;
 		}
 		for(int i = nOfLayers - 2; i > 0; i--)
 		{
@@ -393,7 +401,7 @@ void MultilayerPerceptron::accumulateChange()
 // Update the network weights, from the first layer to the last one
 void MultilayerPerceptron::weightAdjustment() 
 {
-	//TODO: Check
+	//TODO: Check ADD LASTDELTA
 	int N = nOfTrainingPatterns;
 	for (int i = 1; i < nOfLayers; i++)
 	{
@@ -401,8 +409,16 @@ void MultilayerPerceptron::weightAdjustment()
 		{
 			for (int k = 0; k < layers[i - 1].nOfNeurons; k++)
 			{
-				layers[i].neurons[j].w[k] -= (eta * layers[i].neurons[j].deltaW[k])/N + (mu * eta * layers[i].neurons[j].lastDeltaW[k])/N;
+				if(online == true)
+				{
+					layers[i].neurons[j].w[k] -= ((eta * layers[i].neurons[j].deltaW[k])) + ((mu * eta * layers[i].neurons[j].lastDeltaW[k]));
+				}
+				else if (online == false)
+				{
+					layers[i].neurons[j].w[k] -= ((eta * layers[i].neurons[j].deltaW[k])/N) + ((mu * eta * layers[i].neurons[j].lastDeltaW[k])/N);
+				}
 			}
+
 			double value = (eta * layers[i].neurons[j].deltaW[layers[i - 1].nOfNeurons - 1])/N + (mu * eta * layers[i].neurons[j].lastDeltaW[layers[i - 1].nOfNeurons - 1])/N;
 			layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] = layers[i].neurons[j].w[layers[i - 1].nOfNeurons - 1] - value;
 		}

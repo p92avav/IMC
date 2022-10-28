@@ -154,7 +154,7 @@ system("clear");
 
         int maxIter = nIterationsValue;
 
-        if(sflag)
+        if(nflag)
         {
             double *minTrainDatasetInputs = minDatasetInputs(trainDataset);
             double *maxTrainDatasetInputs = maxDatasetInputs(trainDataset);
@@ -250,6 +250,10 @@ system("clear");
         trainStdCCR = sqrt(trainStdCCR/5);
         testStdCCR = sqrt(testStdCCR/5);
 
+        trainAverageCCR = trainAverageCCR*100;
+        testAverageCCR = testAverageCCR*100;
+        trainStdCCR = trainStdCCR*100;
+        testStdCCR = testStdCCR*100;
 
 		cout << "WE HAVE FINISHED WITH ALL THE SEEDS" << endl;
 
