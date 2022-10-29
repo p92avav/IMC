@@ -8,6 +8,9 @@
 #define _MULTILAYERPERCEPTRON_H_
 
 #include "util.h"
+#include <vector>
+
+using namespace std;
 using namespace util;
 
 namespace imc{
@@ -102,6 +105,8 @@ public:
 	// errorFunction=1 => Cross Entropy // errorFunction=0 => MSE
 	double test(Dataset* dataset, int errorFunction);
 	
+	void checkPrediction(int &classExpected, int &classPredicted, vector<double> outputs, vector<double> patternOutputs);
+
 	// Test the network with a dataset and return the CCR
 	double testClassification(Dataset* dataset);
 

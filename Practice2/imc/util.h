@@ -8,7 +8,6 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 #include <cstdlib> // To establish the seed srand() and generate pseudorandom numbers rand()
-
 namespace util
 {
 
