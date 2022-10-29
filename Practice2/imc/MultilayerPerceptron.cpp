@@ -189,38 +189,7 @@ void MultilayerPerceptron::forwardPropagate()
 
 	else if(outputFunction == 1)
 	{
-		//Sigmoid
-		for (int i = 1; i < nOfLayers - 1; i++)
-		{
-			for (int j = 0; j < layers[i].nOfNeurons; j++)
-			{
-				double sum = 0;
-				for (int k = 0; k < layers[i-1].nOfNeurons; k++)
-				{
-					sum += layers[i-1].neurons[k].out * layers[i].neurons[j].w[k];
-				}
-				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
-				layers[i].neurons[j].out = 1/(1 + exp(-sum));
-			}
-		}
 
-		//Softmax to the last layer
-		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
-		{
-			double net = 0.0;
-			for(int j = 0; j < layers[nOfLayers -2].nOfNeurons; j++)
-			{
-				net += layers[nOfLayers - 2].neurons[j].out * layers[nOfLayers - 1].neurons[i].w[j];
-			}
-			net += layers[nOfLayers - 1].neurons[i].w[layers[nOfLayers - 2].nOfNeurons];
-
-			double sum = 0.0;
-			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
-			{
-				sum += exp(layers[nOfLayers - 2].neurons[j].out * layers[nOfLayers - 1].neurons[i].w[j]);
-			}
-			layers[nOfLayers - 1].neurons[i].out = exp(net)/sum;
-		}
 	}
 }
 // ------------------------------
@@ -308,36 +277,7 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 	//Softmax and MSE
 	if(outputFunction == 1 && errorFunction == 0)
 	{
-		for(int  i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
-		{
-			double sum = 0.0;
-			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
-			{
-				if( i == j)
-				{
-					sum += (target[i] - layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (1 - layers[nOfLayers-1].neurons[i].out);
-				}
-				else
-				{
-					sum += (target[i] - layers[nOfLayers-1].neurons[i].out) * layers[nOfLayers-1].neurons[i].out * (-layers[nOfLayers-1].neurons[i].out);
-				}
-			}	
-			layers[nOfLayers - 1].neurons[i].delta = -sum;
-		}
-
-		for(int i = nOfLayers - 2; i > 0; i--)
-		{
-			for(int j = 0; j < layers[i].nOfNeurons; j++)
-			{
-				double sum = 0;
-				for(int k = 0; k < layers[i + 1].nOfNeurons; k++)
-				{
-					sum += layers[i + 1].neurons[k].delta * layers[i + 1].neurons[k].w[j];
-				}
-				double newDelta = sum * layers[i].neurons[j].out * (1 - layers[i].neurons[j].out);
-				layers[i].neurons[j].delta = newDelta;
-			}
-		}		
+		
 	}
 
 	//Softmax and CCR
@@ -370,6 +310,7 @@ void MultilayerPerceptron::accumulateChange()
 void MultilayerPerceptron::weightAdjustment() 
 {
 	//TODO:	
+	int N = nOfTrainingPatterns;
 	if(online == true)
 	{
 		for (int i = 1; i < nOfLayers; i++)
@@ -387,7 +328,6 @@ void MultilayerPerceptron::weightAdjustment()
 	}
 	else if(online == false)
 	{
-		int N = nOfTrainingPatterns;
 		for (int i = 1; i < nOfLayers; i++)
 		{
 			for (int j = 0; j < layers[i].nOfNeurons; j++)
@@ -432,13 +372,16 @@ void MultilayerPerceptron::printNetwork()
 void MultilayerPerceptron::performEpoch(double* input, double* target, int errorFunction) 
 {
 	//TODO: Check
-	for(int i = 1; i < nOfLayers; i++)
+	if(online == true)
 	{
-		for(int j = 0; j < layers[i].nOfNeurons; j++)
+		for(int i = 1; i < nOfLayers; i++)
 		{
-			for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
+			for(int j = 0; j < layers[i].nOfNeurons; j++)
 			{
-				layers[i].neurons[j].deltaW[k] = 0.0;
+				for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
+				{
+					layers[i].neurons[j].deltaW[k] = 0.0;
+				}
 			}
 		}
 	}
@@ -460,15 +403,30 @@ void MultilayerPerceptron::performEpoch(double* input, double* target, int error
 void MultilayerPerceptron::train(Dataset* trainDataset, int errorFunction) 
 {
 	//TODO: Check
+	if(online == false)
+	{
+		for(int i = 1; i < nOfLayers; i++)
+		{
+			for(int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				for(int k = 0; k < layers[i-1].nOfNeurons + 1; k++)
+				{
+					layers[i].neurons[j].deltaW[k] = 0.0;
+				}
+			}
+		}
+	}
+
 	for(int i = 0; i < trainDataset->nOfPatterns; i++)
 	{
 		performEpoch(trainDataset->inputs[i], trainDataset->outputs[i], errorFunction);
-		
-		if(online == false)
-		{
-			weightAdjustment();
-		}
 	}
+
+	if(online == false)
+	{
+		weightAdjustment();
+	}
+
 }
 
 // ------------------------------
@@ -493,18 +451,44 @@ double MultilayerPerceptron::test(Dataset* dataset, int errorFunction)
 	{
 		error = -error / dataset->nOfPatterns;
 	}
-}
 
-void MultilayerPerceptron::checkPrediction(int &classExpected, int &classPredicted, vector<double> outputs, vector<double> patternOutputs)
-{
-
+	return error;
 }
 
 // ------------------------------
 // Test the network with a dataset and return the CCR
 double MultilayerPerceptron::testClassification(Dataset* dataset) 
 {
+	double *output = new double[dataset->nOfOutputs];
+	double correct = 0;
 
+	for(int i = 0; i < dataset->nOfPatterns; i++)
+	{
+		feedInputs(dataset->inputs[i]);
+		forwardPropagate();
+		getOutputs(output);
+		
+		int obtainedClass = 0, expectedClass = 0;
+		for(int j = 0; j < dataset->nOfOutputs; j++)
+		{
+			if(dataset->outputs[i][j] > dataset->outputs[i][expectedClass])
+			{
+				expectedClass = j;
+			}
+			if(output[j] > output[obtainedClass])
+			{
+				obtainedClass = j;
+			}
+		}
+
+		if(obtainedClass == expectedClass)
+		{
+			correct++;
+		}
+	}
+
+	delete[] output;
+	return correct / dataset->nOfPatterns;
 }
 
 

@@ -104,8 +104,6 @@ public:
 	// Test the network with a dataset and return the error
 	// errorFunction=1 => Cross Entropy // errorFunction=0 => MSE
 	double test(Dataset* dataset, int errorFunction);
-	
-	void checkPrediction(int &classExpected, int &classPredicted, vector<double> outputs, vector<double> patternOutputs);
 
 	// Test the network with a dataset and return the CCR
 	double testClassification(Dataset* dataset);
