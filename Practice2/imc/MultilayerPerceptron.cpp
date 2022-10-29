@@ -189,7 +189,45 @@ void MultilayerPerceptron::forwardPropagate()
 
 	else if(outputFunction == 1)
 	{
+		for (int i = 1; i < nOfLayers; i++)
+		{
+			for (int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				double sum = 0.0;
+				for (int k = 0; k < layers[i-1].nOfNeurons; k++)
+				{
+					sum += layers[i-1].neurons[k].out * layers[i].neurons[j].w[k];
+				}
+				sum += layers[i].neurons[j].w[layers[i-1].nOfNeurons];
+				layers[i].neurons[j].out = 1/(1 + exp(-sum));
+			}
+		}
+		
+		//Softmax in the last layer
+		double *net = new double[layers[nOfLayers-1].nOfNeurons];
+		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; i++)
+		{
+			net[i] = 0.0;
+		}
 
+		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; i++)
+		{
+			for(int j = 0; j < layers[nOfLayers-1].nOfNeurons; j++)
+			{
+				net[i] += layers[nOfLayers-2].neurons[j].out * layers[nOfLayers-1].neurons[i].w[j];
+			}
+		}
+
+		double netSum = 0.0;
+		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; i++)
+		{
+			netSum += exp(net[i]);
+		}
+
+		for(int i = 0; i < layers[nOfLayers-1].nOfNeurons; i++)
+		{
+			layers[nOfLayers-1].neurons[i].out = exp(net[i])/netSum;
+		}
 	}
 }
 // ------------------------------
@@ -226,7 +264,6 @@ double MultilayerPerceptron::obtainError(double* target, int errorFunction)
 void MultilayerPerceptron::backpropagateError(double* target, int errorFunction) 
 {
 	// Sigmoid and MSE
-
 	if(outputFunction == 0 && errorFunction == 0)
 	{
 		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
@@ -277,13 +314,71 @@ void MultilayerPerceptron::backpropagateError(double* target, int errorFunction)
 	//Softmax and MSE
 	if(outputFunction == 1 && errorFunction == 0)
 	{
-		
+		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{
+			double sum = 0.0;
+			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
+			{
+				if(i == j)
+				{
+					sum += (target[j] - layers[nOfLayers - 1].neurons[j].out) * layers[nOfLayers - 1].neurons[i].out * (1 - layers[nOfLayers - 1].neurons[j].out);
+				}
+				else
+				{
+					sum += (target[j] - layers[nOfLayers - 1].neurons[j].out) * layers[nOfLayers - 1].neurons[i].out * (-layers[nOfLayers - 1].neurons[j].out);
+				}
+				layers[nOfLayers - 1].neurons[i].delta = -sum;
+			}
+		}
+
+		for(int i = nOfLayers - 2; i > 0; i--)
+		{
+			for(int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				double sum = 0;
+				for(int k = 0; k < layers[i + 1].nOfNeurons; k++)
+				{
+					sum += layers[i + 1].neurons[k].delta * layers[i + 1].neurons[k].w[j];
+				}
+				double newDelta = sum * layers[i].neurons[j].out * (1 - layers[i].neurons[j].out);
+				layers[i].neurons[j].delta = newDelta;
+			}
+		}
 	}
 
 	//Softmax and CCR
 	if(outputFunction == 1 && errorFunction == 1)
 	{
+		for(int i = 0; i < layers[nOfLayers - 1].nOfNeurons; i++)
+		{
+			double sum = 0.0;
+			for(int j = 0; j < layers[nOfLayers - 1].nOfNeurons; j++)
+			{
+				if(i == j)
+				{
+					sum += (target[j] / layers[nOfLayers - 1].neurons[j].out) * layers[nOfLayers - 1].neurons[i].out * (1 - layers[nOfLayers - 1].neurons[j].out);
+				}
+				else
+				{
+					sum += (target[j] / layers[nOfLayers - 1].neurons[j].out) * layers[nOfLayers - 1].neurons[i].out * (-layers[nOfLayers - 1].neurons[j].out);
+				}
+				layers[nOfLayers - 1].neurons[i].delta = -sum;
+			}
+		}
 
+		for(int i = nOfLayers - 2; i > 0; i--)
+		{
+			for(int j = 0; j < layers[i].nOfNeurons; j++)
+			{
+				double sum = 0;
+				for(int k = 0; k < layers[i + 1].nOfNeurons; k++)
+				{
+					sum += layers[i + 1].neurons[k].delta * layers[i + 1].neurons[k].w[j];
+				}
+				double newDelta = sum * layers[i].neurons[j].out * (1 - layers[i].neurons[j].out);
+				layers[i].neurons[j].delta = newDelta;
+			}
+		}
 	}
 }
 
