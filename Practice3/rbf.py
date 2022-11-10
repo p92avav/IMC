@@ -12,16 +12,32 @@ IMC: lab assignment 3
 import pickle
 import os
 
+import click
+import numpy as np
+import pandas as pd
+
 @click.command()
 @click.option('--train_file', '-t', default=None, required=False,
               help=u'Name of the file with training data.')
-
 # TODO Include the rest of parameters...
-
 @click.option('--pred', '-p', is_flag=True, default=False, show_default=True,
               help=u'Use the prediction mode.') # KAGGLE
 @click.option('--model', '-m', default="", show_default=False,
               help=u'Directory name to save the models (or name of the file to load the model, if the prediction mode is active).') # KAGGLE
+@click.option('--test_file', '-t', default=None,  required=False,
+              help=u'Name of the file with test data.')
+@click.option('--classification', '-c', is_flag=True ,default=False,  show_default=True,
+              help=u'Use the classification mode.')
+@click.option('--ratio_rbf', '-r', default=0.1,  required=False,
+              help=u'radium of RBF neurons with respect to the total number of patterns in training.')
+@click.option('--l2', '-l', is_flag=True, default=False, show_default=True,
+                help=u'Use the L2 regularization mode.')
+@click.option('--eta', 'e', default=1e-2,  required=False,
+             help=u'Value of the learning rate.')
+@click.option('--fairness', '-f', is_flag=True, default=False, show_default=True,
+             help=u'Extract fairness metrics from predictions.')
+@click.option('--outputs', '-o', default=1,  required=False,
+              help=u'Number of output columnns of the dataset.')
 def train_rbf_total(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, model, pred):
     """ 5 executions of RBFNN training
     
@@ -159,6 +175,7 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
                                                                         outputs)
 
     #TODO: Obtain num_rbf from ratio_rbf
+    num_rbf = int(ratio_rbf * len(train_inputs))
     print("Number of RBFs used: %d" %(num_rbf))
     # 1. Init centroids + 2. clustering 
     kmeans, distances, centers = clustering(classification, train_inputs, 
@@ -180,6 +197,9 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
     TODO: Obtain the distances from the centroids to the test patterns
           and obtain the R matrix for the test set
     """
+    test_distances = kmeans.transform(test_inputs)
+    test_r_matrix = calculate_r_matrix(test_distances, radii)
+
     if not classification:
         train_predictions = np.dot(r_matrix, coefficients)
         test_predictions = np.dot(test_r_matrix, coefficients)
@@ -257,12 +277,41 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
         TODO: Obtain the predictions for training and test and calculate
               the MSE
         """
+        #Obtain the predictions for training and test and calculate the MSE
+        train_predictions = np.dot(r_matrix, coefficients)
+        test_predictions = np.dot(test_r_matrix, coefficients)
+
+        train_mse = sum(sum((train_outputs - train_predictions) ** 2)) / \
+                    (outputs*train_predictions.shape[0])
+        test_mse = sum(sum((test_outputs - test_predictions) ** 2)) / \
+                     (outputs*test_predictions.shape[0])
+        if outputs == 1:
+            train_ccr = sum(np.around(train_predictions) == train_outputs) / \
+                        float(len(train_predictions)) * 100
+            test_ccr = sum(np.around(test_predictions) == test_outputs) / \
+                       float(len(test_predictions)) * 100
+
     else:
         """
         TODO: Obtain the predictions for training and test and calculate
               the CCR. Obtain also the MSE, but comparing the obtained
               probabilities and the target probabilities
         """
+        #Obtain the predictions for training and test and calculate the CCR
+        train_predictions = logreg.predict(r_matrix)
+        test_predictions = logreg.predict(test_r_matrix)
+        train_0_1 = (train_outputs == range(0,int(max(train_outputs)[0]+1)))
+        test_0_1 = (test_outputs == range(0,int(max(test_outputs)[0]+1)))
+        train_mse = sum(sum((train_0_1 - logreg.predict_proba(r_matrix))**2)) / \
+                    ((max(train_outputs)+1)*train_outputs.shape[0])
+        train_mse = sum(train_mse)
+        test_mse = sum(sum((test_0_1 - logreg.predict_proba(test_r_matrix))**2)) / \
+                    ((max(test_outputs)+1)*test_outputs.shape[0])
+        test_mse = sum(test_mse)
+        train_ccr = sum(train_predictions == train_outputs.ravel()) / \
+                    float(len(train_predictions)) * 100
+        test_ccr = sum(test_predictions == test_outputs.ravel()) / \
+                     float(len(test_predictions)) * 100
 
     return train_mse, test_mse, train_ccr, test_ccr
 
@@ -294,7 +343,17 @@ def read_data(train_file, test_file, outputs):
     """
 
     #TODO: Complete the code of the function
-    return train_results, test_results 
+    #Read data using read_csv from pandas
+    train_data = pd.read_csv(train_file, header=None)
+    test_data = pd.read_csv(test_file, header=None)
+
+    #Separate inputs from outputs
+    train_inputs = train_data.iloc[:,:-outputs]
+    train_outputs = train_data.iloc[:,-outputs:]
+    test_inputs = test_data.iloc[:,:-outputs]
+    test_outputs = test_data.iloc[:,-outputs:]
+
+    return train_inputs, train_outputs, test_inputs, test_outputs
 
 def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """ Initialize the centroids for the case of classification
@@ -316,6 +375,8 @@ def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """
     
     #TODO: Complete the code of the function
+    #Initialize the centroids for the case of classification
+
     return centroids
 
 def clustering(classification, train_inputs, train_outputs, num_rbf):
@@ -375,7 +436,7 @@ def calculate_r_matrix(distances, radii):
         This method obtains the R matrix (as explained in the slides),
         which contains the activation of each RBF for each pattern, including
         a final column with ones, to simulate bias
-        
+
         Parameters
         ----------
         distances: array, shape (n_patterns,num_rbf)
