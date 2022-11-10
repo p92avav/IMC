@@ -15,16 +15,23 @@ import os
 import click
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import squareform, pdist
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+
 
 @click.command()
 @click.option('--train_file', '-t', default=None, required=False,
               help=u'Name of the file with training data.')
-# TODO Include the rest of parameters...
+# TODO Include the rest of parameters....
 @click.option('--pred', '-p', is_flag=True, default=False, show_default=True,
               help=u'Use the prediction mode.') # KAGGLE
 @click.option('--model', '-m', default="", show_default=False,
               help=u'Directory name to save the models (or name of the file to load the model, if the prediction mode is active).') # KAGGLE
-@click.option('--test_file', '-t', default=None,  required=False,
+@click.option('--test_file', '-T', default=None,  required=False,
               help=u'Name of the file with test data.')
 @click.option('--classification', '-c', is_flag=True ,default=False,  show_default=True,
               help=u'Use the classification mode.')
@@ -32,7 +39,7 @@ import pandas as pd
               help=u'radium of RBF neurons with respect to the total number of patterns in training.')
 @click.option('--l2', '-l', is_flag=True, default=False, show_default=True,
                 help=u'Use the L2 regularization mode.')
-@click.option('--eta', 'e', default=1e-2,  required=False,
+@click.option('--eta', '-e', default=1e-2,  required=False,
              help=u'Value of the learning rate.')
 @click.option('--fairness', '-f', is_flag=True, default=False, show_default=True,
              help=u'Extract fairness metrics from predictions.')
@@ -67,10 +74,8 @@ def train_rbf_total(train_file, test_file, classification, ratio_rbf, l2, eta, f
             print("Seed: %d" % s)
             print("-----------")     
             np.random.seed(s)
-            
-            train_results, test_results = \
-                train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, \
-                             model and "{}/{}.pickle".format(model, s) or "")
+
+            train_results, test_results = train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, model and "{}/{}.pickle".format(model, s) or "")
 
             train_mses[s-1] = train_results["ccr"]
             test_mses[s-1] = test_results["mse"] 
@@ -176,6 +181,7 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
 
     #TODO: Obtain num_rbf from ratio_rbf
     num_rbf = int(ratio_rbf * len(train_inputs))
+
     print("Number of RBFs used: %d" %(num_rbf))
     # 1. Init centroids + 2. clustering 
     kmeans, distances, centers = clustering(classification, train_inputs, 
@@ -277,43 +283,36 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
         TODO: Obtain the predictions for training and test and calculate
               the MSE
         """
-        #Obtain the predictions for training and test and calculate the MSE
-        train_predictions = np.dot(r_matrix, coefficients)
-        test_predictions = np.dot(test_r_matrix, coefficients)
+        train_obtained = np.dot(r_matrix, coefficients)
+        test_obtained = np.dot(test_r_matrix, coefficients)
 
-        train_mse = sum(sum((train_outputs - train_predictions) ** 2)) / \
-                    (outputs*train_predictions.shape[0])
-        test_mse = sum(sum((test_outputs - test_predictions) ** 2)) / \
-                     (outputs*test_predictions.shape[0])
-        if outputs == 1:
-            train_ccr = sum(np.around(train_predictions) == train_outputs) / \
-                        float(len(train_predictions)) * 100
-            test_ccr = sum(np.around(test_predictions) == test_outputs) / \
-                       float(len(test_predictions)) * 100
+        train_mse = mean_squared_error(train_obtained, train_outputs)
+        test_mse = mean_squared_error(test_obtained, test_outputs)
 
+        train_ccr = 0
+        test_ccr = 0
     else:
         """
         TODO: Obtain the predictions for training and test and calculate
               the CCR. Obtain also the MSE, but comparing the obtained
               probabilities and the target probabilities
         """
-        #Obtain the predictions for training and test and calculate the CCR
-        train_predictions = logreg.predict(r_matrix)
-        test_predictions = logreg.predict(test_r_matrix)
-        train_0_1 = (train_outputs == range(0,int(max(train_outputs)[0]+1)))
-        test_0_1 = (test_outputs == range(0,int(max(test_outputs)[0]+1)))
-        train_mse = sum(sum((train_0_1 - logreg.predict_proba(r_matrix))**2)) / \
-                    ((max(train_outputs)+1)*train_outputs.shape[0])
-        train_mse = sum(train_mse)
-        test_mse = sum(sum((test_0_1 - logreg.predict_proba(test_r_matrix))**2)) / \
-                    ((max(test_outputs)+1)*test_outputs.shape[0])
-        test_mse = sum(test_mse)
-        train_ccr = sum(train_predictions == train_outputs.ravel()) / \
-                    float(len(train_predictions)) * 100
-        test_ccr = sum(test_predictions == test_outputs.ravel()) / \
-                     float(len(test_predictions)) * 100
+        #TODO:Check
+        train_mse = 0
+        test_mse = 0
 
-    return train_mse, test_mse, train_ccr, test_ccr
+        train_ccr = logreg.socre(r_matrix, train_outputs) * 100
+        test_ccr = logreg.score(test_r_matrix, test_outputs) * 100
+
+        train_results = {
+            'ccr' : train_ccr,
+            'mse' : train_mse}
+
+        test_results = {
+            'ccr' : test_ccr,
+            'mse' : test_mse}
+
+        return train_results, test_results
 
 def read_data(train_file, test_file, outputs):
     """ Read the input data
@@ -343,15 +342,18 @@ def read_data(train_file, test_file, outputs):
     """
 
     #TODO: Complete the code of the function
-    #Read data using read_csv from pandas
-    train_data = pd.read_csv(train_file, header=None)
-    test_data = pd.read_csv(test_file, header=None)
+    #TODO: Check
+    train_df = pd.read_csv(train_file, header=None)
+    test_df = pd.read_csv(test_file, header=None)
 
-    #Separate inputs from outputs
-    train_inputs = train_data.iloc[:,:-outputs]
-    train_outputs = train_data.iloc[:,-outputs:]
-    test_inputs = test_data.iloc[:,:-outputs]
-    test_outputs = test_data.iloc[:,-outputs:]
+    train_np = train_df.to_numpy()
+    test_np = test_df.to_numpy()
+
+    train_inputs = train_np[:, 0:-outputs]
+    train_outputs = train_np[:, train_inputs.shape[1]:]
+
+    test_inputs = test_np[:, 0:-outputs]
+    test_outputs = test_np[:, test_inputs.shape[1]:]
 
     return train_inputs, train_outputs, test_inputs, test_outputs
 
@@ -375,8 +377,9 @@ def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """
     
     #TODO: Complete the code of the function
-    #Initialize the centroids for the case of classification
+    x_train, x_test, y_train, y_test = train_test_split(train_inputs, train_outputs, test_size=num_rbf, stratify=train_outputs)
 
+    centroids = x_train
     return centroids
 
 def clustering(classification, train_inputs, train_outputs, num_rbf):
@@ -408,6 +411,16 @@ def clustering(classification, train_inputs, train_outputs, num_rbf):
     """
 
     #TODO: Complete the code of the function
+    if classification:
+        centers = init_centroids_classification(train_inputs, train_outputs, num_rbf)
+        kmeans = KMeans(n_clusters=num_rbf, init=centers, n_init=1, max_iter=500)
+    else:
+        kmeans = KMeans(n_clusters=num_rbf, init='random', n_init=1, max_iter=500)
+
+    kmeans.fit(train_inputs)
+    distances = kmeans.transform(train_inputs)
+    centers = kmeans.cluster_centers_
+
     return kmeans, distances, centers
 
 def calculate_radii(centers, num_rbf):
@@ -429,6 +442,13 @@ def calculate_radii(centers, num_rbf):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    radii = np.array([])
+    distances = squareform(pdist(centers))
+
+    for i in range(num_rbf):
+        radii = np.append(radii, sum(distances[i] / (2 * (num_rbf - 1))))
+
     return radii
 
 def calculate_r_matrix(distances, radii):
@@ -436,7 +456,7 @@ def calculate_r_matrix(distances, radii):
         This method obtains the R matrix (as explained in the slides),
         which contains the activation of each RBF for each pattern, including
         a final column with ones, to simulate bias
-
+        
         Parameters
         ----------
         distances: array, shape (n_patterns,num_rbf)
@@ -452,6 +472,14 @@ def calculate_r_matrix(distances, radii):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    net = np.power(distances, 2)
+
+    for i in range(net.shape[1]):
+        net[:, i] = np.exp(-net[:, i] / (2 * np.power(radii[i], 2)))
+
+    out = net
+    r_matrix = np.hstack((out, np.ones((out.shape[0], 1))))
     return r_matrix
 
 def invert_matrix_regression(r_matrix, train_outputs):
@@ -476,6 +504,8 @@ def invert_matrix_regression(r_matrix, train_outputs):
     """
 
     #TODO: Complete the code of the function
+    pseudoinverse = np.linalg.pinv(r_matrix)
+    coefficients = np.dot(pseudoinverse, train_outputs)
     return coefficients
 
 def logreg_classification(matriz_r, train_outputs, l2, eta):
@@ -503,6 +533,13 @@ def logreg_classification(matriz_r, train_outputs, l2, eta):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    if l2:
+        logreg = LogisticRegression(C=(1 / eta), solver='liblinear')
+    else:
+        logreg = LogisticRegression(penalty='l1', C=(1 / eta), solver='liblinear')
+
+    logreg.fit(matriz_r, train_outputs.ravel())
     return logreg
 
 
