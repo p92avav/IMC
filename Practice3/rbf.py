@@ -77,7 +77,7 @@ def train_rbf_total(train_file, test_file, classification, ratio_rbf, l2, eta, f
 
             train_results, test_results = train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, model and "{}/{}.pickle".format(model, s) or "")
 
-            train_mses[s-1] = train_results["ccr"]
+            train_mses[s-1] = train_results["mse"]
             test_mses[s-1] = test_results["mse"] 
             train_ccrs[s-1] = train_results["ccr"]
             test_ccrs[s-1] = test_results["ccr"]
@@ -304,15 +304,15 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
         train_ccr = logreg.socre(r_matrix, train_outputs) * 100
         test_ccr = logreg.score(test_r_matrix, test_outputs) * 100
 
-        train_results = {
-            'ccr' : train_ccr,
-            'mse' : train_mse}
+    train_results = {
+        'ccr' : train_ccr,
+        'mse' : train_mse}
 
-        test_results = {
-            'ccr' : test_ccr,
-            'mse' : test_mse}
+    test_results = {
+        'ccr' : test_ccr,
+        'mse' : test_mse}
 
-        return train_results, test_results
+    return train_results, test_results
 
 def read_data(train_file, test_file, outputs):
     """ Read the input data
