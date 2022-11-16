@@ -12,17 +12,39 @@ IMC: lab assignment 3
 import pickle
 import os
 
+import click
+import numpy as np
+import pandas as pd
+from scipy.spatial.distance import squareform, pdist
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from fairlearn.metrics import MetricFrame, false_negative_rate, false_positive_rate
+
+
 @click.command()
 @click.option('--train_file', '-t', default=None, required=False,
               help=u'Name of the file with training data.')
-
-# TODO Include the rest of parameters...
-
+# TODO Include the rest of parameters....
 @click.option('--pred', '-p', is_flag=True, default=False, show_default=True,
               help=u'Use the prediction mode.') # KAGGLE
 @click.option('--model', '-m', default="", show_default=False,
               help=u'Directory name to save the models (or name of the file to load the model, if the prediction mode is active).') # KAGGLE
-
+@click.option('--test_file', '-T', default=None,  required=False,
+              help=u'Name of the file with test data.')
+@click.option('--classification', '-c', is_flag=True ,default=False,  show_default=True,
+              help=u'Use the classification mode.')
+@click.option('--ratio_rbf', '-r', default=0.1,  required=False,
+              help=u'radium of RBF neurons with respect to the total number of patterns in training.')
+@click.option('--l2', '-l', is_flag=True, default=False, show_default=True,
+                help=u'Use the L2 regularization mode.')
+@click.option('--eta', '-e', default=1e-2,  required=False,
+             help=u'Value of the learning rate.')
+@click.option('--fairness', '-f', is_flag=True, default=False, show_default=True,
+             help=u'Extract fairness metrics from predictions.')
+@click.option('--outputs', '-o', default=1,  required=False,
+              help=u'Number of output columnns of the dataset.')
 def train_rbf_total(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, model, pred):
     """ 5 executions of RBFNN training
     
@@ -52,10 +74,8 @@ def train_rbf_total(train_file, test_file, classification, ratio_rbf, l2, eta, f
             print("Seed: %d" % s)
             print("-----------")     
             np.random.seed(s)
-            
-            train_results, test_results = \
-                train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, \
-                             model and "{}/{}.pickle".format(model, s) or "")
+
+            train_results, test_results = train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairness, outputs, model and "{}/{}.pickle".format(model, s) or "")
 
             train_mses[s-1] = train_results["mse"]
             test_mses[s-1] = test_results["mse"] 
@@ -160,9 +180,12 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
                                                                         outputs)
 
     #TODO: Obtain num_rbf from ratio_rbf
+    num_rbf = int(ratio_rbf * len(train_inputs))
+
     print("Number of RBFs used: %d" %(num_rbf))
     # 1. Init centroids + 2. clustering 
-    kmeans, distances, centers = clustering(classification, train_inputs, train_outputs, num_rbf)
+    kmeans, distances, centers = clustering(classification, train_inputs, 
+                                              train_outputs, num_rbf)
     
     # 3. Adjust radii
     radii = calculate_radii(centers, num_rbf)
@@ -180,6 +203,9 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
     TODO: Obtain the distances from the centroids to the test patterns
           and obtain the R matrix for the test set
     """
+    test_distances = kmeans.transform(test_inputs)
+    test_r_matrix = calculate_r_matrix(test_distances, radii)
+
     if not classification:
         train_predictions = np.dot(r_matrix, coefficients)
         test_predictions = np.dot(test_r_matrix, coefficients)
@@ -201,9 +227,6 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
         test_predictions = logreg.predict(test_r_matrix)
         train_0_1 = (train_outputs == range(0,int(max(train_outputs)[0]+1)))
         test_0_1 = (test_outputs == range(0,int(max(test_outputs)[0]+1)))
-        # Is it not neccesary to calculate and return MSE for classification
-        # for the lab assignement 2022. You can delete/comment the following
-        # lines related to MSE
         train_mse = sum(sum((train_0_1 - logreg.predict_proba(r_matrix))**2)) / \
                     ((max(train_outputs)+1)*train_outputs.shape[0])
         train_mse = sum(train_mse)
@@ -226,19 +249,32 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
             'ccr' : test_ccr,
             'mse' : test_mse}
         
-        # Fairness evaluation will be only evaluated for classification. 
+        # Fairness evaluation
         if fairness:
-            # Group label (we assume it is in the last column of input data): 
+            # Group label (we assume it is in the last column of input data):
             # 1 women / 0 men
-            lu = np.unique(train_inputs[:,-1])
-            train_gender_bin = np.zeros(train_inputs[:,-1].shape)
-            train_gender_bin[ train_inputs[:,-1] == lu[1]] = 1
-            test_gender_bin = np.zeros(test_inputs[:,-1].shape)
-            test_gender_bin[ test_inputs[:,-1] == lu[1]] = 1
-            
-            #TODO: Complete the code for fairness here
+            lu = np.unique(train_inputs[:, -1])
+            train_gender_bin = np.zeros(train_inputs[:, -1].shape)
+            train_gender_bin[train_inputs[:, -1] == lu[1]] = 1
+            test_gender_bin = np.zeros(test_inputs[:, -1].shape)
+            test_gender_bin[test_inputs[:, -1] == lu[1]] = 1
+
+            # TODO: Complete the code for fairness here
 
             # train_results and test results are expected to be a MetricFrame
+
+            metrics = {
+                'false negative rate': false_negative_rate,
+                'false positive rate': false_positive_rate}
+
+            train_metrics = MetricFrame(metrics=metrics, y_true=train_outputs, y_pred=train_predictions, sensitive_features=train_gender_bin)
+
+            train_results['fairnes_metrics'] = train_metrics
+
+            test_metrics = MetricFrame(metrics=metrics, y_true=test_outputs, y_pred=test_predictions, sensitive_features=test_gender_bin)
+
+            test_results['fairnes_metrics'] = test_metrics
+
             return train_results, test_results
 
     # # # # KAGGLE # # # #
@@ -259,7 +295,43 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
 
         with open(model_file, 'wb') as f:
             pickle.dump(save_obj, f)
+    
+    # # # # # # # # # # #
 
+    if not classification:
+        """
+        TODO: Obtain the predictions for training and test and calculate
+              the MSE
+        """
+        train_obtained = np.dot(r_matrix, coefficients)
+        test_obtained = np.dot(test_r_matrix, coefficients)
+
+        train_mse = mean_squared_error(train_obtained, train_outputs)
+        test_mse = mean_squared_error(test_obtained, test_outputs)
+
+        train_ccr = 0
+        test_ccr = 0
+    else:
+        """
+        TODO: Obtain the predictions for training and test and calculate
+              the CCR. Obtain also the MSE, but comparing the obtained
+              probabilities and the target probabilities
+        """
+        #TODO:Check
+
+        train_mse = mean_squared_error(logreg.predict_proba(r_matrix), train_0_1)
+        test_mse = mean_squared_error(logreg.predict_proba(test_r_matrix), test_0_1)
+
+        train_ccr = logreg.score(r_matrix, train_outputs) * 100
+        test_ccr = logreg.score(test_r_matrix, test_outputs) * 100
+
+    train_results = {
+        'ccr' : train_ccr,
+        'mse' : train_mse}
+
+    test_results = {
+        'ccr' : test_ccr,
+        'mse' : test_mse}
 
     return train_results, test_results
 
@@ -291,7 +363,20 @@ def read_data(train_file, test_file, outputs):
     """
 
     #TODO: Complete the code of the function
-    return train_results, test_results 
+    #TODO: Check
+    train_df = pd.read_csv(train_file, header=None)
+    test_df = pd.read_csv(test_file, header=None)
+
+    train_np = train_df.to_numpy()
+    test_np = test_df.to_numpy()
+
+    train_inputs = train_np[:, 0:-outputs]
+    train_outputs = train_np[:, train_inputs.shape[1]:]
+
+    test_inputs = test_np[:, 0:-outputs]
+    test_outputs = test_np[:, test_inputs.shape[1]:]
+
+    return train_inputs, train_outputs, test_inputs, test_outputs
 
 def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """ Initialize the centroids for the case of classification
@@ -313,6 +398,8 @@ def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """
     
     #TODO: Complete the code of the function
+    x_train, x_test, y_train, y_test = train_test_split(train_inputs, train_outputs, train_size=num_rbf, stratify=train_outputs)
+    centroids = x_train
     return centroids
 
 def clustering(classification, train_inputs, train_outputs, num_rbf):
@@ -344,6 +431,17 @@ def clustering(classification, train_inputs, train_outputs, num_rbf):
     """
 
     #TODO: Complete the code of the function
+    if classification:
+        centers = init_centroids_classification(train_inputs, train_outputs, num_rbf)
+        kmeans = KMeans(n_clusters=num_rbf, init=centers, n_init=1, max_iter=500)
+    else:
+        kmeans = KMeans(n_clusters=num_rbf, init='random', n_init=1, max_iter=500)
+
+
+    kmeans.fit(train_inputs)
+    distances = kmeans.transform(train_inputs)
+    centers = kmeans.cluster_centers_
+
     return kmeans, distances, centers
 
 def calculate_radii(centers, num_rbf):
@@ -365,6 +463,13 @@ def calculate_radii(centers, num_rbf):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    radii = np.array([])
+    distances = squareform(pdist(centers))
+
+    for i in range(num_rbf):
+        radii = np.append(radii, sum(distances[i] / (2 * (num_rbf - 1))))
+
     return radii
 
 def calculate_r_matrix(distances, radii):
@@ -388,6 +493,14 @@ def calculate_r_matrix(distances, radii):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    net = np.power(distances, 2)
+
+    for i in range(net.shape[1]):
+        net[:, i] = np.exp(-net[:, i] / (2 * np.power(radii[i], 2)))
+
+    out = net
+    r_matrix = np.hstack((out, np.ones((out.shape[0], 1))))
     return r_matrix
 
 def invert_matrix_regression(r_matrix, train_outputs):
@@ -412,6 +525,8 @@ def invert_matrix_regression(r_matrix, train_outputs):
     """
 
     #TODO: Complete the code of the function
+    pseudoinverse = np.linalg.pinv(r_matrix)
+    coefficients = np.dot(pseudoinverse, train_outputs)
     return coefficients
 
 def logreg_classification(matriz_r, train_outputs, l2, eta):
@@ -439,6 +554,13 @@ def logreg_classification(matriz_r, train_outputs, l2, eta):
     """
 
     #TODO: Complete the code of the function
+    #TODO: Check
+    if l2:
+        logreg = LogisticRegression(C=(1 / eta), solver='liblinear', penalty='l2')
+    else:
+        logreg = LogisticRegression(penalty='l1', C=(1 / eta), solver='liblinear')
+
+    logreg.fit(matriz_r, train_outputs.ravel())
     return logreg
 
 
