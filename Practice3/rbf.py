@@ -175,17 +175,14 @@ def train_rbf(train_file, test_file, classification, ratio_rbf, l2, eta, fairnes
             train_results but for the test set. 
 
     """
-    train_inputs, train_outputs, test_inputs, test_outputs = read_data(train_file, 
-                                                                        test_file,
-                                                                        outputs)
+    train_inputs, train_outputs, test_inputs, test_outputs = read_data(train_file, test_file, outputs)
 
     #TODO: Obtain num_rbf from ratio_rbf
     num_rbf = int(ratio_rbf * len(train_inputs))
 
     print("Number of RBFs used: %d" %(num_rbf))
     # 1. Init centroids + 2. clustering 
-    kmeans, distances, centers = clustering(classification, train_inputs, 
-                                              train_outputs, num_rbf)
+    kmeans, distances, centers = clustering(classification, train_inputs, train_outputs, num_rbf)
     
     # 3. Adjust radii
     radii = calculate_radii(centers, num_rbf)
@@ -398,8 +395,8 @@ def init_centroids_classification(train_inputs, train_outputs, num_rbf):
     """
     
     #TODO: Complete the code of the function
-    x_train, x_test, y_train, y_test = train_test_split(train_inputs, train_outputs, train_size=num_rbf, stratify=train_outputs)
-    centroids = x_train
+    train_X, centroids, train_y, test_y = train_test_split(train_inputs, train_outputs.ravel(), test_size=num_rbf, stratify=train_outputs)
+
     return centroids
 
 def clustering(classification, train_inputs, train_outputs, num_rbf):
@@ -435,7 +432,7 @@ def clustering(classification, train_inputs, train_outputs, num_rbf):
         centers = init_centroids_classification(train_inputs, train_outputs, num_rbf)
         kmeans = KMeans(n_clusters=num_rbf, init=centers, n_init=1, max_iter=500)
     else:
-        kmeans = KMeans(n_clusters=num_rbf, init='random', n_init=1, max_iter=500)
+        kmeans = KMeans(n_clusters=num_rbf, init='random', n_init=1, max_iter=500) #random vs k-means++
 
 
     kmeans.fit(train_inputs)
@@ -501,6 +498,7 @@ def calculate_r_matrix(distances, radii):
 
     out = net
     r_matrix = np.hstack((out, np.ones((out.shape[0], 1))))
+
     return r_matrix
 
 def invert_matrix_regression(r_matrix, train_outputs):
@@ -527,6 +525,7 @@ def invert_matrix_regression(r_matrix, train_outputs):
     #TODO: Complete the code of the function
     pseudoinverse = np.linalg.pinv(r_matrix)
     coefficients = np.dot(pseudoinverse, train_outputs)
+
     return coefficients
 
 def logreg_classification(matriz_r, train_outputs, l2, eta):
@@ -554,7 +553,7 @@ def logreg_classification(matriz_r, train_outputs, l2, eta):
     """
 
     #TODO: Complete the code of the function
-    #TODO: Check
+    #TODO: Check. Use fit_intercept?
     if l2:
         logreg = LogisticRegression(C=(1 / eta), solver='liblinear', penalty='l2')
     else:
